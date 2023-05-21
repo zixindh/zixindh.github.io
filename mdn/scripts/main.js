@@ -14,7 +14,7 @@ myImage.onclick = function() {
   function setUserName() {
     var myName = prompt('Please enter your name.');
     localStorage.setItem('name', myName);
-    myHeading.innerHTML = 'Mozilla is cool, ' + myName;
+    myHeading.innerHTML = 'This is Heng, ' + myName;
   }
 
   if(!localStorage.getItem('name')) {
