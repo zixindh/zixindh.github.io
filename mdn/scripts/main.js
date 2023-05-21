@@ -21,7 +21,7 @@ myImage.onclick = function() {
     setUserName();
   } else {
     var storedName = localStorage.getItem('name');
-    myHeading.innerHTML = 'Mozilla is cool, ' + storedName;
+    myHeading.innerHTML = 'This is Heng, ' + storedName;
   }
 
   myButton.onclick = function() {
