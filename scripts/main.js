@@ -14,7 +14,7 @@ myImage.onclick = function() {
   function setUserName() {
     var myName = prompt('Please enter your name.');
     localStorage.setItem('name', myName);
-    myHeading.innerHTML = 'Mozilla is cool, ' + myName;
+    myHeading.innerHTML = 'I have been mostly working in data analysis to generate insights for operation or sales team to reach KPI., ' + myName;
   }
 
   if(!localStorage.getItem('name')) {
