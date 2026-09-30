@@ -1,0 +1,48 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#f5f6f8">
+<title>Shanghai Disney Ops Daily Digest</title>
+<style>
+:root{font-family:-apple-system,BlinkMacSystemFont,"PingFang SC","Helvetica Neue","Segoe UI",Arial,sans-serif;color:#111827;background:#f5f6f8}
+*{box-sizing:border-box}body{margin:0;min-height:100vh;background:#f5f6f8;padding:max(20px,env(safe-area-inset-top)) 16px max(28px,env(safe-area-inset-bottom))}
+.card{max-width:440px;margin:4vh auto;background:#fff;border:1px solid #e5e7eb;border-radius:20px;padding:20px;box-shadow:0 10px 30px rgba(15,23,42,.06)}
+h1{font-size:22px;line-height:1.2;margin:0 0 6px}.sub{font-size:13px;line-height:1.45;color:#6b7280;margin-bottom:18px}
+label{display:block;font-size:12px;font-weight:700;margin-top:12px}input{display:block;width:100%;margin-top:6px;border:1px solid #d1d5db;border-radius:12px;padding:13px 14px;font:16px/1.2 inherit;color:#111827;background:#fff}
+button{width:100%;border:0;border-radius:12px;padding:13px 14px;margin-top:14px;background:#111827;color:#fff;font:700 15px/1.2 inherit}.secondary{background:#f3f4f6;color:#111827}button:disabled{opacity:.55}
+.row{display:grid;grid-template-columns:1fr 1fr;gap:8px}.status{margin-top:14px;border-radius:12px;background:#f8fafc;padding:12px;font-size:13px;line-height:1.45;color:#4b5563}.good{color:#047857;background:#ecfdf5}.bad{color:#b91c1c;background:#fef2f2}
+.email{font-weight:750;color:#111827;overflow-wrap:anywhere}.hidden{display:none}.back{display:inline-block;margin-top:14px;font-size:12px;color:#4f46e5;text-decoration:none;font-weight:700}.small{font-size:11px;color:#9ca3af;margin-top:12px;line-height:1.4}
+</style>
+</head>
+<body>
+<div class="card">
+<h1>Daily Ops Digest</h1>
+<div class="sub">One concise Shanghai Disney Ops Listening email each morning after the daily AI scan.</div>
+<section id="login">
+<label>Email<input id="email" type="email" inputmode="email" autocomplete="email"></label>
+<label>Password<input id="password" type="password" autocomplete="current-password"></label>
+<button id="signIn">Sign in</button><div id="loginMsg" class="status hidden"></div>
+</section>
+<section id="account" class="hidden">
+<div class="status">Signed in as <div id="accountEmail" class="email"></div><div id="subState" style="margin-top:7px"></div></div>
+<div class="row"><button id="subscribe">Subscribe</button><button id="unsubscribe" class="secondary">Unsubscribe</button></div>
+<button id="signOut" class="secondary">Sign out</button><div id="msg" class="status hidden"></div>
+</section>
+<a class="back" href="https://shanghai-disney-ops-listening.vercel.app">← Back to Ops Listening</a>
+<div class="small">Uses your existing Ops Listening account. Subscription email must match your signed-in account.</div>
+</div>
+<script>
+const SB='https://udyqxlnexnxhmslsebre.supabase.co',KEY='sb_publishable_IgyY0SZrN1tZUPNRnHWVrw_OOZwEsrH',$=id=>document.getElementById(id);let session=null;
+function show(id,text,type){const e=$(id);e.textContent=text;e.className='status '+(type||'');e.classList.remove('hidden')}function hide(id){$(id).classList.add('hidden')}
+function h(){return {'apikey':KEY,'Authorization':'Bearer '+session.access_token,'Content-Type':'application/json'}}
+async function login(email,password){const r=await fetch(SB+'/auth/v1/token?grant_type=password',{method:'POST',headers:{apikey:KEY,'Content-Type':'application/json'},body:JSON.stringify({email,password})});const j=await r.json();if(!r.ok)throw new Error(j.error_description||j.msg||j.message||'Sign in failed');session=j;localStorage.setItem('digest_session',JSON.stringify(j))}
+async function state(){$('login').classList.toggle('hidden',!!session);$('account').classList.toggle('hidden',!session);if(!session)return;const u=session.user;$('accountEmail').textContent=u.email||'';const r=await fetch(SB+'/rest/v1/disney_digest_subscriptions?user_id=eq.'+encodeURIComponent(u.id)+'&select=active',{headers:h()});const rows=r.ok?await r.json():[];$('subState').innerHTML=rows[0]?.active?'<b style="color:#047857">Subscribed · daily</b>':'<span>Not subscribed</span>'}
+$('signIn').onclick=async()=>{const b=$('signIn');b.disabled=true;try{await login($('email').value.trim(),$('password').value);hide('loginMsg');await state()}catch(e){show('loginMsg',e.message,'bad')}finally{b.disabled=false}};
+$('subscribe').onclick=async()=>{const u=session.user,r=await fetch(SB+'/rest/v1/disney_digest_subscriptions?on_conflict=user_id',{method:'POST',headers:{...h(),Prefer:'resolution=merge-duplicates,return=minimal'},body:JSON.stringify({user_id:u.id,email:u.email,active:true,updated_at:new Date().toISOString()})});if(!r.ok){show('msg',await r.text(),'bad');return}show('msg','Subscribed. You will receive the daily digest.','good');await state()};
+$('unsubscribe').onclick=async()=>{const u=session.user,r=await fetch(SB+'/rest/v1/disney_digest_subscriptions?user_id=eq.'+encodeURIComponent(u.id),{method:'PATCH',headers:{...h(),Prefer:'return=minimal'},body:JSON.stringify({active:false,updated_at:new Date().toISOString()})});if(!r.ok){show('msg',await r.text(),'bad');return}show('msg','Unsubscribed.','good');await state()};
+$('signOut').onclick=async()=>{localStorage.removeItem('digest_session');session=null;await state()};
+try{session=JSON.parse(localStorage.getItem('digest_session')||'null')}catch{};state();
+</script>
+</body></html>
